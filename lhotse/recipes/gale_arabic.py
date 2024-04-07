@@ -200,18 +200,21 @@ def parse_transcripts(transcript_paths: List[Path]) -> List[SupervisionSegment]:
                 "text": str,
             },
             skipinitialspace=True,
-            error_bad_lines=False,
-            warn_bad_lines=True,
+            on_bad_lines='warn',
         )
         # Remove segments with no transcription
+        all_seg = len(df)
         df = df[df.speaker != "no speaker"]
-
+        
         # some reco_id's end with .sph
         df["reco_id"] = df["reco_id"].apply(lambda x: x.strip().replace(".sph", ""))
         # some speaker names have `*` in them
         df["speaker"] = df["speaker"].apply(
             lambda x: x.replace("*", "").strip() if not pd.isnull(x) else x
         )
+        df = df[df.speaker != ""]
+        filt_seg = len(df)
+        print(f'kept segments: {filt_seg/all_seg*100}')
         df["text"] = df["text"].apply(lambda x: x.strip() if not pd.isnull(x) else x)
         for idx, row in df.iterrows():
             supervision_id = f"{row['reco_id']}-{row['speaker']}-{idx}"
@@ -241,3 +244,21 @@ def parse_transcripts(transcript_paths: List[Path]) -> List[SupervisionSegment]:
                 )
             )
     return supervisions
+
+def main():
+    audio_dirs = ["/shared/datasets/asr/GALE/Arabic/LDC2016S07","/shared/datasets/asr/GALE/Arabic/LDC2017S02", 
+    "/shared/datasets/asr/GALE/Arabic/LDC2013S02", "/shared/datasets/asr/GALE/Arabic/LDC2013S07", 
+    "/shared/datasets/asr/GALE/Arabic/LDC2014S07", "/shared/datasets/asr/GALE/Arabic/LDC2015S01",
+     "/shared/datasets/asr/GALE/Arabic/LDC2015S11", "/shared/datasets/asr/GALE/Arabic/LDC2016S01", 
+     "/shared/datasets/asr/GALE/Arabic/LDC2017S15", "/shared/datasets/asr/GALE/Arabic/LDC2018S05"]
+    transcript_dirs = ["/shared/datasets/asr/GALE/Arabic/LDC2016T17","/shared/datasets/asr/GALE/Arabic/LDC2017T04",
+     "/shared/datasets/asr/GALE/Arabic/LDC2013T17", "/shared/datasets/asr/GALE/Arabic/LDC2013T04", 
+     "/shared/datasets/asr/GALE/Arabic/LDC2014T17", "/shared/datasets/asr/GALE/Arabic/LDC2015T01",
+      "/shared/datasets/asr/GALE/Arabic/LDC2015T16", "/shared/datasets/asr/GALE/Arabic/LDC2016T06",
+       "/shared/datasets/asr/GALE/Arabic/LDC2017T12", "/shared/datasets/asr/GALE/Arabic/LDC2018T14"]
+    output_dir = '/shared/exp/ahussein/kanari_models/SURT/data/manifests/'
+    prepare_gale_arabic(audio_dirs, transcript_dirs, output_dir)
+
+if __name__ == '__main__':
+    main()
+

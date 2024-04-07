@@ -76,9 +76,9 @@ def prepare_iwslt22_ta(
     corpus_dir: Pathlike,
     splits: Pathlike,
     output_dir: Optional[Pathlike] = None,
-    normalize_text: bool = False,
+    clean: bool = True,
     langs: Optional[List[str]] = ["ta", "eng"],
-    num_jobs: int = 1,
+    num_jobs: int = 4,
 ) -> Dict[str, Dict[str, Union[RecordingSet, SupervisionSet]]]:
     """
     Prepares manifests for the train dev and test1 splits.
@@ -94,6 +94,7 @@ def prepare_iwslt22_ta(
     :return: A dict with manifests. The keys are: ``{'recordings', 'supervisions'}``.
 
     """
+    
     manifests = {}
     split_files = load_splits(Path(splits))
     corpus_dir = Path(corpus_dir)
@@ -140,7 +141,7 @@ def prepare_iwslt22_ta(
                             _filename_to_supervisions,
                             p,
                             translations_path,
-                            normalize_text,
+                            clean,
                             exclude,
                             langs,
                         )
@@ -170,8 +171,8 @@ def prepare_iwslt22_ta(
             if output_dir is not None:
                 output_dir = Path(output_dir)
                 output_dir.mkdir(parents=True, exist_ok=True)
-                sups_.to_file(output_dir / f"iwslt22-ta_recordings_{split}.jsonl.gz")
-                recs_.to_file(output_dir / f"iwslt22-ta_supervisions_{split}.jsonl.gz")
+                recs_.to_file(output_dir / f"iwslt22-ta_recordings_{split}.jsonl.gz")
+                sups_.to_file(output_dir / f"iwslt22-ta_supervisions_{split}.jsonl.gz")
 
     return manifests
 
@@ -179,7 +180,7 @@ def prepare_iwslt22_ta(
 def _filename_to_supervisions(
     p: Path,
     translations_path: Path,
-    normalize_text: bool,
+    clean: bool,
     exclude: list,
     langs: list,
 ):
@@ -212,7 +213,7 @@ def _filename_to_supervisions(
             utt_id == utt_id_tgt
         ), f"The loaded source and target files are not sorted properly: {utt_id} {utt_id_tgt}"
 
-        if normalize_text:
+        if clean:
             # Aggressive Tunisian text normalization from https://aclanthology.org/2022.iwslt-1.29.pdf
             text = text_cleaning(text)
             if text.strip() == "":
@@ -351,5 +352,14 @@ def text_cleaning(text):
     text = remove_diacritics(text)
     text = remove_extra_space(text)
     text = normalize_arabic(text)
-    text = normalize_text_(text)
+    #text = normalize_text_(text)
     return text
+
+
+def main():
+    corpus_dir = "/shared/datasets/asr/LDC/LDC2022E01"
+    splits = "/shared/exp/ahussein/github_repos/iwslt22-dialect"
+    output_dir = "/shared/exp/ahussein/kanari_models/SURT/data/manifests/"
+    prepare_iwslt22_ta(corpus_dir, splits, output_dir)
+if __name__ == "__main__":
+    main()
