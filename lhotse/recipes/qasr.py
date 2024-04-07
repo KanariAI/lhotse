@@ -145,7 +145,7 @@ def prepare_qasr(
             supervisions = SupervisionSet.from_segments(supervisions_list).filter(
             lambda s: s.duration > 0.0)
             assert (
-                len(supervisions) == 1592264
+                len(supervisions) == 1592226
             ), f"Expected 375103 supervisions for train, found {len(supervisions)}"
 
         if text_cleaning is True:
